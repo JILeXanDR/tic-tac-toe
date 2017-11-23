@@ -24,3 +24,7 @@
 .cell:hover {
     background: #ffdddd;
 }
+
+canvas {
+    border: 1px solid black;
+}

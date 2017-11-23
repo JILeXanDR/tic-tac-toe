@@ -6,6 +6,13 @@ export const GAME_STATUS_ACTIVE = 'active';
 export const GAME_STATUS_FINISHED = 'finished';
 
 export class Game {
+
+    instanceProperty = "bork";
+
+    boundFunction = () => {
+        return this.instanceProperty;
+    };
+
     /**
      *
      * @param {View} view
@@ -39,19 +46,19 @@ export class Game {
      */
     getRandomEmptyPosition() {
 
-        for (let positionStr in this.hits) {
-            let value = this.hits[positionStr];
-            if (!value) {
-                let pos = positionStr.split(',');
-                let [x, y] = pos;
+        let positions = Object.keys(this.getEmptyPositions());
 
-                return new Position(x, y);
-            }
+        if (!positions.length) {
+            throw new Error('уже нет свободных полей');
         }
 
-        throw new Error('уже нет свободных полей');
+        return positions[Math.floor(Math.random() * positions.length)];
     }
 
+    /**
+     *
+     * @returns {{}}
+     */
     getEmptyPositions() {
 
         let empty = {};
@@ -70,8 +77,8 @@ export class Game {
         try {
             this.getRandomEmptyPosition();
         } catch (e) {
-            console.log(e);
             this.status = GAME_STATUS_FINISHED;
+            console.log('игра окончена');
         }
     }
 
@@ -107,7 +114,9 @@ export class Game {
 
         this.calculateResult();
 
-        this.nextPlayer();
+        if (this.status !== GAME_STATUS_FINISHED) {
+            this.nextPlayer();
+        }
     }
 
     passHitToCurrentPlayer() {
@@ -138,6 +147,8 @@ export class Game {
     start() {
 
         console.info('start game');
+
+        this.view.draw();
 
         this.view.cells((el) => {
             this.hits[getPositionByCell(el)] = null;

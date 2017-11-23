@@ -1,6 +1,11 @@
 export const PLAYER_TYPE_X = 'X';
 export const PLAYER_TYPE_0 = '0';
 
+// function hello(value = 'noValue') {
+//     console.log('hello => %s', value);
+// }
+
+// @hello(1)
 export class Player {
 
     constructor(value) {
