@@ -1,0 +1,26 @@
+.area {
+    /*width: 200px;*/
+    /*height: 200px;*/
+}
+
+.cell-line {
+    /*height: 100%;*/
+    /*width: 100%;*/
+    display: flex;
+}
+
+.cell {
+    width: 100px;
+    height: 100px;
+    background: #e2e2e2;
+    margin: 0px;
+    display: inline-block;
+    border: 1px solid #b5b0b0;
+    text-align: center;
+    font-size: 100px;
+    line-height: 100px;
+}
+
+.cell:hover {
+    background: #ffdddd;
+}
