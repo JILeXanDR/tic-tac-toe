@@ -154,8 +154,13 @@ export class Game {
             this.hits[getPositionByCell(el)] = null;
         });
 
-        this.view.onCellClick((cellEl) => {
-            this.onCellClick(getPositionByCell(cellEl));
+        this.view.onCellClick(({cellEl, position}) => {
+            if (typeof this.currentPlayer.onCellClickFn === "function") {
+                this.currentPlayer.onCellClickFn.call(null, {
+                    g: this,
+                    position: position,
+                });
+            }
         });
 
         this.status = GAME_STATUS_ACTIVE;

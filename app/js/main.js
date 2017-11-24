@@ -7,21 +7,14 @@ let game = new Game(new View('#game'));
 let myPlayer = new Player(PLAYER_TYPE_X);
 let opponentPlayer = new Player(PLAYER_TYPE_0);
 
-myPlayer.myHit((g) => {
-    setTimeout(() => {
-        console.log('myPlayer.myHit');
-
-        // g.onCellClick((position) => {
-        let position = g.getRandomEmptyPosition();
-        console.log('onCellClick > . нажато %s', position);
-        g.makeHit(position)
-        // });
-    }, 500);
+myPlayer.onCellClick(({g, position}) => {
+    console.info('myPlayer.myHit');
+    g.makeHit(position)
 });
 
 opponentPlayer.myHit((g) => {
     setTimeout(() => {
-        console.log('opponentPlayer.myHit');
+        console.info('opponentPlayer.myHit');
         g.makeHit(g.getRandomEmptyPosition());
     }, 500);
 });

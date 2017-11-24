@@ -1,25 +1,33 @@
 export const PLAYER_TYPE_X = 'X';
 export const PLAYER_TYPE_0 = '0';
 
-// function hello(value = 'noValue') {
-//     console.log('hello => %s', value);
-// }
-
-// @hello(1)
 export class Player {
+
+    value = undefined;
+    onMyHitFn = undefined;
+    onCellClickFn = undefined;
 
     constructor(value) {
         this.value = value;
-        this.processHitCb = undefined;
     }
 
     myHit(cbOrData) {
         if (typeof cbOrData === "function") {
-            console.log('set myHit cb');
-            this.processHitCb = cbOrData;
-        } else if (typeof cbOrData === "object" && typeof this.processHitCb === "function") {
-            console.log('run myHit cb');
-            this.processHitCb.apply(this, [cbOrData]);
+            this.onMyHitFn = cbOrData;
+        } else if (typeof cbOrData === "object" && typeof this.onMyHitFn === "function") {
+            this.onMyHitFn.apply(this, [cbOrData]);
         }
     }
+
+    onCellClick(fn) {
+        this.onCellClickFn = fn;
+    }
+
+    // cellClicked(cbOrData) {
+    //     if (typeof cbOrData === "function") {
+    //         this.onCellClickFn = cbOrData;
+    //     } else if (typeof cbOrData === "object" && typeof this.onCellClickFn === "function") {
+    //         this.onCellClickFn.apply(this, [cbOrData]);
+    //     }
+    // }
 }
