@@ -1,5 +1,6 @@
 import {getPositionByCell, getCellByPosition} from './helpers'
 import {Position} from './Position'
+import {PLAYER_TYPE_X, PLAYER_TYPE_0} from "./Player";
 
 export const GAME_STATUS_NOT_STARTED = 'not_started';
 export const GAME_STATUS_ACTIVE = 'active';
@@ -7,29 +8,87 @@ export const GAME_STATUS_FINISHED = 'finished';
 
 export class Game {
 
-    instanceProperty = "bork";
+    _hits = {};
+    _status = GAME_STATUS_NOT_STARTED;
+    _currentPlayer = null;
+    _opponentPlayer = null;
+    _players = [];
+    _onCellClickCb = null;
+    _view = null;
 
-    boundFunction = () => {
-        return this.instanceProperty;
-    };
+    _matrix = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+    ];
 
     /**
      *
      * @param {View} view
      */
     constructor(view) {
-        this.hits = {};
-        this.status = GAME_STATUS_NOT_STARTED;
-        this.currentPlayer = null;
-        this.opponentPlayer = null;
-        this.players = [];
-        this.view = view;
+        this._view = view;
+    }
 
-        /**
-         * {position}
-         * @type {null}
-         */
-        this.onCellClickCb = null;
+    start() {
+
+        console.info('start game');
+
+        this._matrix.forEach((xValue, xIndex) => {
+            this._matrix.forEach((yValue, yIndex) => {
+                let [x, y] = [xIndex + 1, yIndex + 1];
+                this._hits[new Position(x, y)] = 0;
+            });
+        });
+
+        this._view.onCellClick((position) => {
+            if (typeof this._currentPlayer.onCellClickFn === "function") {
+                this._currentPlayer.onCellClickFn.call(null, {
+                    g: this,
+                    position: position,
+                });
+            }
+        });
+
+        this._status = GAME_STATUS_ACTIVE;
+        console.log('игра начата');
+
+        this._nextPlayer();
+    }
+
+    /**
+     *
+     * @param {Position} position
+     */
+    makeHit(position) {
+
+        if (this._status === GAME_STATUS_NOT_STARTED) {
+            alert('игра не начата');
+            return;
+        }
+
+        if (this._status === GAME_STATUS_FINISHED) {
+            alert('игра окончена');
+            return;
+        }
+
+        if (this._hits[position]) {
+            alert('клетка занята');
+            return;
+        }
+
+        this._view.setCellPlayerByPosition(position, this._currentPlayer);
+        this._setPlayerInMatrix(this._currentPlayer, position);
+        this._calculateResult();
+
+        if (this._status !== GAME_STATUS_FINISHED) {
+            this._nextPlayer();
+        }
+    }
+
+    _setPlayerInMatrix(player, position) {
+        this._matrix[position.y - 1][position.x - 1] = player;
+        this._hits[position] = player;
     }
 
     /**
@@ -37,7 +96,19 @@ export class Game {
      * @param {Player} player
      */
     addPlayer(player) {
-        this.players.push(player);
+        if (player.type === PLAYER_TYPE_X) {
+            this._players[0] = player;
+        } else if (player.type === PLAYER_TYPE_0) {
+            this._players[1] = player;
+        }
+    }
+
+    onCellClick(cb) {
+        if (typeof cb === "function") {
+            this._onCellClickCb = cb;
+        } else if (typeof cb === "object" && typeof this._onCellClickCb === "function") {
+            this._onCellClickCb.call(null, cb);
+        }
     }
 
     /**
@@ -52,7 +123,9 @@ export class Game {
             throw new Error('уже нет свободных полей');
         }
 
-        return positions[Math.floor(Math.random() * positions.length)];
+        let [x, y] = positions[Math.floor(Math.random() * positions.length)].split(',');
+
+        return new Position(x, y);
     }
 
     /**
@@ -63,8 +136,8 @@ export class Game {
 
         let empty = {};
 
-        for (let positionStr in this.hits) {
-            let value = this.hits[positionStr];
+        for (let positionStr in this._hits) {
+            let value = this._hits[positionStr];
             if (!value) {
                 empty[positionStr] = value;
             }
@@ -73,99 +146,30 @@ export class Game {
         return empty;
     }
 
-    calculateResult() {
+    _calculateResult() {
         try {
+            console.table(this._matrix);
             this.getRandomEmptyPosition();
         } catch (e) {
-            this.status = GAME_STATUS_FINISHED;
+            this._status = GAME_STATUS_FINISHED;
             console.log('игра окончена');
         }
     }
 
-    /**
-     *
-     * @param {Position} position
-     */
-    makeHit(position) {
-
-        console.log('makeHit => ', position);
-
-        if (this.status === GAME_STATUS_NOT_STARTED) {
-            alert('игра не начата');
-            return;
-        }
-
-        if (this.status === GAME_STATUS_FINISHED) {
-            alert('игра окончена');
-            return;
-        }
-
-        let cellEl = getCellByPosition(position),
-            value = this.hits[position];
-
-        if (value) {
-            alert('клетка занята');
-            return;
-        }
-
-        cellEl.textContent = this.currentPlayer.value;
-
-        this.hits[position] = this.currentPlayer.value;
-
-        this.calculateResult();
-
-        if (this.status !== GAME_STATUS_FINISHED) {
-            this.nextPlayer();
-        }
+    _passHitToCurrentPlayer() {
+        console.log('текущий игрок %s', this._currentPlayer.type);
+        this._currentPlayer.myHit(this);
     }
 
-    passHitToCurrentPlayer() {
-        console.log('текущий игрок %s', this.currentPlayer.value);
-        this.currentPlayer.myHit(this);
-    }
+    _nextPlayer() {
 
-    nextPlayer() {
-
-        if (!this.currentPlayer && !this.opponentPlayer) {
-            this.currentPlayer = this.players[0];
-            this.opponentPlayer = this.players[1];
+        if (!this._currentPlayer && !this._opponentPlayer) {
+            this._currentPlayer = this._players[0];
+            this._opponentPlayer = this._players[1];
         } else {
-            [this.currentPlayer, this.opponentPlayer] = [this.opponentPlayer, this.currentPlayer];
+            [this._currentPlayer, this._opponentPlayer] = [this._opponentPlayer, this._currentPlayer];
         }
 
-        this.passHitToCurrentPlayer();
-    }
-
-    onCellClick(cb) {
-        if (typeof cb === "function") {
-            this.onCellClickCb = cb;
-        } else if (typeof cb === "object" && typeof this.onCellClickCb === "function") {
-            this.onCellClickCb.call(null, cb);
-        }
-    }
-
-    start() {
-
-        console.info('start game');
-
-        this.view.draw();
-
-        this.view.cells((el) => {
-            this.hits[getPositionByCell(el)] = null;
-        });
-
-        this.view.onCellClick(({cellEl, position}) => {
-            if (typeof this.currentPlayer.onCellClickFn === "function") {
-                this.currentPlayer.onCellClickFn.call(null, {
-                    g: this,
-                    position: position,
-                });
-            }
-        });
-
-        this.status = GAME_STATUS_ACTIVE;
-        console.log('игра начата');
-
-        this.nextPlayer();
+        this._passHitToCurrentPlayer();
     }
 }

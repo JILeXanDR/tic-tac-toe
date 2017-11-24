@@ -1,66 +1,42 @@
-import {getPositionByCell} from './helpers'
+import {getPositionByCell, getCellByPosition} from './helpers'
+import {Position} from './Position'
 
 export class View {
 
-    appendToEl = null;
+    _canvasEl = null;
+    _onCellClickFn = null;
+    _cellSize = 100;
 
     constructor(appendTo) {
-        this.appendToEl = document.querySelector(appendTo);
-    }
-
-    cells(cb) {
-
-        let elements = document.querySelectorAll('.js-cell');
-
-        if (!cb) {
-            return elements;
-        }
-
-        elements.forEach(cb);
+        this._canvasEl = document.querySelector(appendTo);
+        this.draw();
     }
 
     onCellClick(fn) {
-        this.cells((el) => {
-            el.addEventListener('click', (e) => {
-                fn({
-                    cellEl: e.currentTarget,
-                    position: getPositionByCell(e.currentTarget),
-                });
-            });
-        });
+        this._onCellClickFn = fn;
     }
 
-    content = '    <div class="area">\n' +
-        '        <div class="cell-line">\n' +
-        '            <div class="cell js-cell" data-position="[1,1]"></div>\n' +
-        '            <div class="cell js-cell" data-position="[2,1]"></div>\n' +
-        '            <div class="cell js-cell" data-position="[3,1]"></div>\n' +
-        '        </div>\n' +
-        '        <div class="cell-line">\n' +
-        '            <div class="cell js-cell" data-position="[1,2]"></div>\n' +
-        '            <div class="cell js-cell" data-position="[2,2]"></div>\n' +
-        '            <div class="cell js-cell" data-position="[3,2]"></div>\n' +
-        '        </div>\n' +
-        '        <div class="cell-line">\n' +
-        '            <div class="cell js-cell" data-position="[1,3]"></div>\n' +
-        '            <div class="cell js-cell" data-position="[2,3]"></div>\n' +
-        '            <div class="cell js-cell" data-position="[3,3]"></div>\n' +
-        '        </div>\n' +
-        '    </div>';
+    setCellPlayerByPosition(position, player) {
+        let cellEl = getCellByPosition(position);
+        cellEl.textContent = player.type;
+    }
 
     draw() {
 
-        let canvas = this.appendToEl;
-        let ctx = canvas.getContext('2d');
-        let size = 100;
+        let ctx = this._canvasEl.getContext('2d');
+
+        this._canvasEl.addEventListener('click', (e) => {
+            let {offsetX: x, offsetY: y} = e;
+            let position = new Position(Math.ceil(x / this._cellSize), Math.ceil(y / this._cellSize));
+            this._onCellClickFn.call(null, position);
+        });
 
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 ctx.fillStyle = 'rgb(' + Math.floor(255 - 42.5 * i) + ', ' + Math.floor(255 - 42.5 * j) + ', 0)';
-                ctx.fillRect(j * size, i * size, size, size);
+                let [x, y] = [j * this._cellSize, i * this._cellSize];
+                ctx.fillRect(x, y, this._cellSize, this._cellSize);
             }
         }
-
-        let area = document.createElement('div');
     }
 }

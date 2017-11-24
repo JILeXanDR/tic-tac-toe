@@ -2,46 +2,14 @@ import {Player, PLAYER_TYPE_0, PLAYER_TYPE_X} from './Player'
 import {Game} from './Game'
 import {View} from './View'
 
-let game = new Game(new View('#game'));
+let game = new Game(new View('#game')),
+    myPlayer = new Player(PLAYER_TYPE_X),
+    opponentPlayer = new Player(PLAYER_TYPE_0);
 
-let myPlayer = new Player(PLAYER_TYPE_X);
-let opponentPlayer = new Player(PLAYER_TYPE_0);
-
-myPlayer.onCellClick(({g, position}) => {
-    console.info('myPlayer.myHit');
-    g.makeHit(position)
-});
-
-opponentPlayer.myHit((g) => {
-    setTimeout(() => {
-        console.info('opponentPlayer.myHit');
-        g.makeHit(g.getRandomEmptyPosition());
-    }, 500);
-});
+myPlayer.myHit((g) => g.makeHit(g.getRandomEmptyPosition()));
+opponentPlayer.onCellClick(({g, position}) => g.makeHit(position));
 
 game.addPlayer(myPlayer);
 game.addPlayer(opponentPlayer);
 
 game.start();
-
-function bar() {
-    console.log('bar');
-}
-
-async function foo() {
-    await bar();
-}
-
-foo();
-
-let x = 5;
-
-let a = do {
-    if (x > 10) {
-        'big';
-    } else {
-        'small';
-    }
-};
-
-console.log(a);

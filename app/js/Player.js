@@ -3,12 +3,12 @@ export const PLAYER_TYPE_0 = '0';
 
 export class Player {
 
-    value = undefined;
+    type = undefined;
     onMyHitFn = undefined;
     onCellClickFn = undefined;
 
-    constructor(value) {
-        this.value = value;
+    constructor(type) {
+        this.type = type;
     }
 
     myHit(cbOrData) {
@@ -22,12 +22,4 @@ export class Player {
     onCellClick(fn) {
         this.onCellClickFn = fn;
     }
-
-    // cellClicked(cbOrData) {
-    //     if (typeof cbOrData === "function") {
-    //         this.onCellClickFn = cbOrData;
-    //     } else if (typeof cbOrData === "object" && typeof this.onCellClickFn === "function") {
-    //         this.onCellClickFn.apply(this, [cbOrData]);
-    //     }
-    // }
 }
