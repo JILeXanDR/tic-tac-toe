@@ -1,4 +1,3 @@
-import {getPositionByCell, getCellByPosition} from './helpers'
 import {Position} from './Position'
 import {PLAYER_TYPE_X, PLAYER_TYPE_0} from "./Player";
 
@@ -8,19 +7,32 @@ export const GAME_STATUS_FINISHED = 'finished';
 
 export class Game {
 
-    _hits = {};
-    _status = GAME_STATUS_NOT_STARTED;
+    _status = null;
     _currentPlayer = null;
     _opponentPlayer = null;
     _players = [];
     _onCellClickCb = null;
     _view = null;
+    _matrix = null;
 
-    _matrix = [
-        [0, 0, 0],
-        [0, 0, 0],
-        [0, 0, 0],
+    _winnableLines = [
+        [[1, 1], [2, 1], [3, 1]], // horizontal line 1
+        [[1, 2], [2, 2], [3, 2]], // horizontal line 2
+        [[1, 3], [2, 3], [3, 3]], // horizontal line 3
+        [[1, 1], [1, 2], [1, 3]], // vertical line 1
+        [[2, 1], [2, 2], [2, 3]], // vertical line 2
+        [[3, 1], [3, 2], [3, 3]], // vertical line 3
+        [[1, 1], [2, 2], [3, 3]], // diagonal 1
+        [[3, 1], [2, 2], [1, 3]], // diagonal 2
     ];
+
+    _emptyMatrix() {
+        return [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+        ];
+    }
 
     /**
      *
@@ -32,14 +44,12 @@ export class Game {
 
     start() {
 
-        console.info('start game');
+        this._matrix = this._emptyMatrix();
+        this._status = GAME_STATUS_NOT_STARTED;
 
-        this._matrix.forEach((xValue, xIndex) => {
-            this._matrix.forEach((yValue, yIndex) => {
-                let [x, y] = [xIndex + 1, yIndex + 1];
-                this._hits[new Position(x, y)] = 0;
-            });
-        });
+        this._view.draw();
+
+        console.info('start game');
 
         this._view.onCellClick((position) => {
             if (typeof this._currentPlayer.onCellClickFn === "function") {
@@ -56,6 +66,14 @@ export class Game {
         this._nextPlayer();
     }
 
+    _getFromMatrix(position) {
+        return this._matrix[position.y - 1][position.x - 1];
+    }
+
+    _setToMatrix(position, player) {
+        this._matrix[position.y - 1][position.x - 1] = player;
+    }
+
     /**
      *
      * @param {Position} position
@@ -63,18 +81,17 @@ export class Game {
     makeHit(position) {
 
         if (this._status === GAME_STATUS_NOT_STARTED) {
-            alert('игра не начата');
-            return;
+            throw new Error('игра не начата');
         }
 
         if (this._status === GAME_STATUS_FINISHED) {
-            alert('игра окончена');
-            return;
+            throw new Error('игра окончена');
         }
 
-        if (this._hits[position]) {
-            alert('клетка занята');
-            return;
+        console.log('position', position);
+
+        if (this._getFromMatrix(position)) {
+            throw new Error('клетка занята');
         }
 
         this._view.setCellPlayerByPosition(position, this._currentPlayer);
@@ -83,12 +100,13 @@ export class Game {
 
         if (this._status !== GAME_STATUS_FINISHED) {
             this._nextPlayer();
+        } else {
+            console.log('игра окончена');
         }
     }
 
     _setPlayerInMatrix(player, position) {
-        this._matrix[position.y - 1][position.x - 1] = player;
-        this._hits[position] = player;
+        this._setToMatrix(position, player);
     }
 
     /**
@@ -117,48 +135,93 @@ export class Game {
      */
     getRandomEmptyPosition() {
 
-        let positions = Object.keys(this.getEmptyPositions());
+        let positions = this.getEmptyPositions();
 
         if (!positions.length) {
             throw new Error('уже нет свободных полей');
         }
 
-        let [x, y] = positions[Math.floor(Math.random() * positions.length)].split(',');
-
-        return new Position(x, y);
+        return Position.createFromString(positions);
     }
 
     /**
      *
-     * @returns {{}}
+     * @returns {Array}
      */
     getEmptyPositions() {
 
-        let empty = {};
+        let positions = [];
 
-        for (let positionStr in this._hits) {
-            let value = this._hits[positionStr];
-            if (!value) {
-                empty[positionStr] = value;
+        for (let y in this._matrix) {
+            for (let x in this._matrix[y]) {
+                let value = this._matrix[y][x];
+                if (!value) {
+                    positions.push(`${parseInt(x) + 1},${parseInt(y) + 1}`);
+                }
             }
         }
 
-        return empty;
+        return positions;
+    }
+
+    /**
+     *
+     * @returns {Player}|null
+     * @private
+     */
+    _checkWinner() {
+
+        for (let lineId = 0; lineId < this._winnableLines.length; lineId++) {
+
+            let linePositions = this._winnableLines[lineId],
+                filledPositions = [];
+
+            for (let i = 0; i < linePositions.length; i++) {
+                let position = linePositions[i];
+                let cell = this._getFromMatrix(new Position(position[0], position[1]));
+                if (cell) {
+                    filledPositions.push(this._getFromMatrix(new Position(position[0], position[1])));
+                }
+            }
+
+            if (filledPositions.length === 3) {
+                filledPositions = filledPositions.filter((v) => {
+                    return filledPositions[0].type === v.type;
+                });
+                if (filledPositions.length === 3) {
+                    return {
+                        lineId,
+                        winner: filledPositions[0],
+                    };
+                }
+            }
+        }
+
+        return null;
     }
 
     _calculateResult() {
+
         try {
-            console.table(this._matrix);
-            this.getRandomEmptyPosition();
+
+            let res = this._checkWinner();
+
+            if (res && res.winner) {
+                this._view.drawLine(this._winnableLines[res.lineId]);
+                this._status = GAME_STATUS_FINISHED;
+            } else {
+                this.getRandomEmptyPosition();
+            }
+
         } catch (e) {
             this._status = GAME_STATUS_FINISHED;
-            console.log('игра окончена');
         }
     }
 
     _passHitToCurrentPlayer() {
-        console.log('текущий игрок %s', this._currentPlayer.type);
-        this._currentPlayer.myHit(this);
+        if (typeof this._currentPlayer.onMyHitFn === "function") {
+            this._currentPlayer.onMyHitFn.call(null, this);
+        }
     }
 
     _nextPlayer() {

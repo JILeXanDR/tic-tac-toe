@@ -11,14 +11,6 @@ export class Player {
         this.type = type;
     }
 
-    myHit(cbOrData) {
-        if (typeof cbOrData === "function") {
-            this.onMyHitFn = cbOrData;
-        } else if (typeof cbOrData === "object" && typeof this.onMyHitFn === "function") {
-            this.onMyHitFn.apply(this, [cbOrData]);
-        }
-    }
-
     onCellClick(fn) {
         this.onCellClickFn = fn;
     }

@@ -19,6 +19,7 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-firefox-launcher": "^1.0.1",
     "karma-jasmine": "^1.1.0",
+    "start-server-webpack-plugin": "^2.2.0",
     "webpack": "^3.8.1"
   },
   "scripts": {
@@ -30,6 +31,7 @@
   "license": "ISC",
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "babel-runtime": "^6.26.0"
+    "babel-runtime": "^6.26.0",
+    "http-server": "^0.10.0"
   }
 }
