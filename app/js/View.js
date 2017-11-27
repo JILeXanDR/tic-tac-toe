@@ -113,9 +113,10 @@ export class View {
             this._canvasEl.addEventListener('click', (e) => this._onCellClickFn(this._coordinateToPosition(e)));
         }
 
-        this._context.fillStyle = '#eceaea';
+        this._context.lineWidth = 1;
+        this._context.strokeStyle = '#c1bfbf';
 
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i < 3; i++) {
 
             let [x, y] = [i * this._cellSize, 0];
 
@@ -125,7 +126,7 @@ export class View {
             this._context.stroke();
         }
 
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i < 3; i++) {
 
             let [x, y] = [0, i * this._cellSize];
 

@@ -1,4 +1,7 @@
-#tic-tac-toe
+##tic-tac-toe
 
-npm install
-npm run watch
+> npm install
+
+> ./node_modules/http-server/bin/http-server
+
+> npm run watch

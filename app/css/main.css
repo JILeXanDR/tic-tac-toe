@@ -3,6 +3,10 @@
     /*height: 200px;*/
 }
 
+.app {
+    text-align: center;
+}
+
 .cell-line {
     /*height: 100%;*/
     /*width: 100%;*/
@@ -26,5 +30,5 @@
 }
 
 canvas {
-    border: 1px solid black;
+    /*border: 1px solid black;*/
 }
